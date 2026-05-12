@@ -4,11 +4,11 @@ Publish data products from one SageMaker Unified Studio (SMUS) domain and make t
 
 ## Problem
 
-SMUS does not natively support cross-domain data product publishing. Enterprises with multiple domains (M&A activity, regulatory separation, multi-BU structures) cannot share Iceberg data products across organizational boundaries without custom infrastructure. Resource links (RAM shares) received in a target domain cannot be further shared within that domain's governance layer.
+SMUS does not natively support cross-domain data product publishing. Enterprises with multiple domains (M&A activity, regulatory separation, multi-BU structures) cannot share data products across organizational boundaries without custom infrastructure. Resource links (RAM shares) received in a target domain cannot be further shared within that domain's governance layer.
 
 ## Solution
 
-Event-driven catalog mirroring with two Lambda functions that sync Iceberg table metadata, business context, data quality results, and lineage across domains. Consumers subscribe and query through native SMUS workflows with Lake Formation governing access.
+Event-driven catalog mirroring with two Lambda functions that sync table metadata, business context, data quality results, and lineage across domains. Consumers subscribe and query through native SMUS workflows with Lake Formation governing access.
 
 ### Key Features
 
@@ -25,7 +25,7 @@ Event-driven catalog mirroring with two Lambda functions that sync Iceberg table
 Producer Account                    Marketplace Account                 Consumer Project
 ┌─────────────────┐               ┌──────────────────────────┐        ┌─────────────────┐
 │                 │               │                          │        │                 │
-│ Iceberg Table   │──EventBridge─▶│ Lambda 1: glue-table-sync│        │                 │
+│ Glue Table      │──EventBridge─▶│ Lambda 1: glue-table-sync│        │                 │
 │ (S3 data)       │  (CreateTable)│  • Mirrors table         │        │                 │
 │                 │               │  • Grants LF (grantable) │        │                 │
 │                 │               │                          │        │                 │
@@ -55,7 +55,7 @@ Producer Account                    Marketplace Account                 Consumer
 ## Prerequisites
 
 - Two AWS accounts with SMUS domains configured
-- Producer account: Iceberg tables in a Glue database, S3 bucket with data
+- Producer account: Tables in a Glue database, S3 bucket with data
 - Marketplace account: SMUS project with Lakehouse Database environment
 - Cross-account EventBridge permissions configured
 - Lake Formation: Producer's S3 location registered in Marketplace account
@@ -232,7 +232,7 @@ Add `MirrorCatalogLFRole` from the Marketplace account to the Producer's S3 buck
 
 ### First-time setup
 
-1. **Producer:** Create Iceberg table → auto-mirrors to marketplace account (~30s)
+1. **Producer:** Create table → auto-mirrors to marketplace account (~30s)
 2. **Producer:** Run data source, curate asset (name, description, readme), publish
 3. **Marketplace:** Run data source (manual) → creates managed asset → triggers metadata sync
 4. **Consumer:** Discovers asset in catalog → subscribes → approver approves → queries data
