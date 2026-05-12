@@ -243,25 +243,6 @@ Add `MirrorCatalogLFRole` from the Marketplace account to the Producer's S3 buck
 - Schema changes → auto-mirrored via Glue table sync
 - DQ results → pulled on next sync cycle
 
-## Key Technical Findings
-
-### Managed Asset Requirement
-
-DataZone subscription fulfilment only works for **managed assets** (created by a data source run). Assets created via `create_asset` API are "unmanaged" and cannot fulfil subscriptions natively.
-
-### Preserving Managed Status
-
-`create_asset_revision` breaks managed status unless **ALL existing forms** are passed back unchanged:
-
-- `GlueTableForm` — required by API
-- `DataSourceReferenceForm` — links asset to data source (critical for managed status)
-- `SubscriptionTermsForm` — approval settings
-- `AssetCommonDetailsForm` — merge business metadata here, preserve `sourceIdentifier`
-
-### LF Grantable Permissions
-
-The project's environment role needs SELECT+DESCRIBE **with grant option** on mirrored tables. Without this, DataZone cannot delegate access to subscribers even though the asset is managed.
-
 ## Known Limitations
 
 | Limitation | Workaround |
