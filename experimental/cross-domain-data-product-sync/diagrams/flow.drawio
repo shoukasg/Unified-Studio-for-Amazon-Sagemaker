@@ -1,0 +1,212 @@
+<mxfile host="app.diagrams.net" modified="2026-05-12T07:50:00.000Z" agent="Kiro" version="21.0.0">
+  <diagram name="Step-by-Step Flow" id="step-flow">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Cross-Domain Data Product Lifecycle — Sequence Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="500" y="10" width="500" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- PHASE 1: Table Creation -->
+        <mxCell id="phase1" value="PHASE 1: Table Creation &amp; Sync" style="text;html=1;align=left;fontSize=12;fontStyle=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="50" width="1760" height="25" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 1 -->
+        <mxCell id="s1-user" value="① User: CREATE TABLE&#xa;rooter_glue_db_981.customer_accounts&#xa;(Iceberg on S3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="90" width="220" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-ct" value="CloudTrail-based event&#xa;(Glue has no native EB events&#xa;for table ops — ~30s delay)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="280" y="90" width="140" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-eb1" value="EventBridge (Acct 1)&#xa;glue-table-sync-to-account2&#xa;matches CreateTable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="430" y="90" width="170" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-eb2" value="→ Cross-account →&#xa;EventBridge (Acct 2)&#xa;glue-sync-from-account1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="630" y="90" width="160" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-lambda" value="glue-table-sync Lambda&#xa;1. Assumes GlueFederationAccessRole&#xa;2. Reads table from Account 1&#xa;3. Creates table in Account 2&#xa;4. Grants LF SELECT+DESCRIBE&#xa;   (with grant option) to project role" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="820" y="80" width="250" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-result" value="RESULT:&#xa;✓ Mirrored table in Account 2&#xa;✓ Points to Account 1 S3&#xa;✓ LF grantable ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="85" width="180" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s1-limit" value="⚠️ Limitation:&#xa;~30s latency&#xa;(CloudTrail)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="90" width="110" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Phase 1 -->
+        <mxCell id="a1" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s1-user" target="s1-ct"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a2" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s1-ct" target="s1-eb1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a3" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s1-eb1" target="s1-eb2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a4" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s1-eb2" target="s1-lambda"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a5" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s1-lambda" target="s1-result"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- PHASE 2: Curate & Publish -->
+        <mxCell id="phase2" value="PHASE 2: Curate &amp; Publish in Account 1" style="text;html=1;align=left;fontSize=12;fontStyle=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="190" width="1760" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s2-ds" value="② Run Data Source&#xa;(Account 1)&#xa;discovers table → asset" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="230" width="170" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s3-curate" value="③ Curate Asset&#xa;name, description, readme,&#xa;column descriptions, glossary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="230" y="225" width="190" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s4-publish" value="④ PUBLISH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#8E24AA;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="235" width="110" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s4-eb" value="Native EventBridge event&#xa;(instant — no CloudTrail)&#xa;&quot;Asset Added To Catalog&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="590" y="225" width="200" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s4-lambda" value="catalog-sync-mirror Lambda fires&#xa;→ Reads asset from Account 1 ✓&#xa;→ Searches for managed asset...&#xa;→ NOT FOUND (expected)&#xa;→ Logs: &quot;awaiting data source run&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E0E0;strokeColor=#9E9E9E;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="220" width="230" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s4-note" value="⚠️ First-time only:&#xa;Lambda can't sync yet.&#xa;Resolves in Phase 3." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="230" width="150" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Phase 2 -->
+        <mxCell id="b1" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s2-ds" target="s3-curate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b2" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s3-curate" target="s4-publish"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b3" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s4-publish" target="s4-eb"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b4" style="rounded=1;strokeWidth=1;dashed=1;" edge="1" parent="1" source="s4-eb" target="s4-lambda"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="b5" style="rounded=1;strokeWidth=1;dashed=1;" edge="1" parent="1" source="s4-lambda" target="s4-note"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- PHASE 3: Data Source in Account 2 -->
+        <mxCell id="phase3" value="PHASE 3: Data Source Run in Account 2 (THE KEY STEP)" style="text;html=1;align=left;fontSize=12;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="320" width="1760" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s6-ds" value="⑥ Run Data Source&#xa;(Account 2 — MANUAL)&#xa;Federation Project" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="360" width="180" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s6-managed" value="Data source discovers&#xa;mirrored table →&#xa;creates MANAGED asset&#xa;(sets DataSourceReferenceForm,&#xa;SubscriptionTermsForm)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="240" y="355" width="200" height="75" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s6-event" value="Native EventBridge event&#xa;(instant)&#xa;&quot;Data Source Run Succeeded&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="470" y="360" width="150" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s7-lambda" value="⑦ catalog-sync-mirror Lambda&#xa;1. Lists tables in Account 1&#xa;2. Finds managed asset (by catalogId+db+table)&#xa;3. Reads ALL existing forms from asset&#xa;4. Reads business metadata from Account 1&#xa;5. Merges summary+readme into forms&#xa;6. create_asset_revision (ALL forms)&#xa;7. Auto-publishes&#xa;8. Pulls DQ results → PostTimeSeriesDataPoints&#xa;9. Syncs lineage → PostLineageEvent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="630" y="345" width="280" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s8-result" value="⑧ RESULT:&#xa;✓ Managed asset (subscribable)&#xa;✓ Business name from Account 1&#xa;✓ Description + Summary + Readme&#xa;✓ DQ results (pulled from Account 1)&#xa;✓ Lineage synced&#xa;✓ Published in catalog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=9;fontStyle=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="940" y="350" width="220" height="110" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s6-limits" value="⚠️ Limitations:&#xa;• Data source run is manual&#xa;  (can schedule hourly)&#xa;• Glossary terms NOT synced&#xa;  (domain-scoped)&#xa;• Column descriptions only if&#xa;  present in Account 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="350" width="190" height="110" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Phase 3 -->
+        <mxCell id="c1" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s6-ds" target="s6-managed"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c2" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s6-managed" target="s6-event"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c3" style="rounded=1;strokeWidth=2;strokeColor=#E53935;" edge="1" parent="1" source="s6-event" target="s7-lambda"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c4" style="rounded=1;strokeWidth=2;strokeColor=#43A047;" edge="1" parent="1" source="s7-lambda" target="s8-result"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- PHASE 4: Subscription -->
+        <mxCell id="phase4" value="PHASE 4: Consumer Subscription &amp; Access" style="text;html=1;align=left;fontSize=12;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="510" width="1760" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s9" value="⑨ Consumer discovers&#xa;asset in catalog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="550" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s10" value="⑩ Subscribe&#xa;(PENDING)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="220" y="550" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s11" value="⑪ Approver approves&#xa;(manual — Federation project)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#8E24AA;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="545" width="210" height="55" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s12" value="⑫ DataZone NATIVELY:&#xa;• Grants LF SELECT to consumer role&#xa;• Creates resource link in consumer DB&#xa;(No custom Lambda needed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="540" width="230" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s13" value="⑬ Consumer QUERIES&#xa;&#xa;Athena / Notebook&#xa;→ resource link&#xa;→ mirrored table&#xa;→ LF credential vending&#xa;→ Account 1 S3 (zero copy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="870" y="535" width="220" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s4-limits" value="⚠️ Limitations:&#xa;• Approval is in Account 2&#xa;  (not routed to Account 1 yet)&#xa;• Consumer sees resource link&#xa;  name (customer_accounts_1)&#xa;  not original table name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="540" width="200" height="95" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Phase 4 -->
+        <mxCell id="d1" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s9" target="s10"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s10" target="s11"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3" style="rounded=1;strokeWidth=2;strokeColor=#43A047;" edge="1" parent="1" source="s11" target="s12"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4" style="rounded=1;strokeWidth=2;strokeColor=#43A047;" edge="1" parent="1" source="s12" target="s13"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- PHASE 5: Ongoing Updates -->
+        <mxCell id="phase5" value="PHASE 5: Ongoing Updates (Automated)" style="text;html=1;align=left;fontSize=12;fontStyle=1;fillColor=#E8EAF6;strokeColor=#5C6BC0;rounded=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="20" y="660" width="1760" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s-update" value="Update asset in Account 1&#xa;(change desc, add column,&#xa;re-publish)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="700" width="180" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s-update-auto" value="AUTO: catalog-sync-mirror&#xa;fires → finds managed asset&#xa;→ updates revision&#xa;→ re-publishes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="240" y="700" width="190" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s-dq2" value="DQ job completes&#xa;in Account 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="470" y="700" width="150" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s-dq-auto" value="DQ results pulled on&#xa;next asset sync&#xa;(re-publish or data source run)&#xa;— not real-time" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="650" y="695" width="180" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="s-revoke" value="Revoke subscription&#xa;→ DataZone removes LF&#xa;→ Consumer loses access" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#8E24AA;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="700" width="190" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrows Phase 5 -->
+        <mxCell id="e1" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s-update" target="s-update-auto"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="rounded=1;strokeWidth=1;" edge="1" parent="1" source="s-dq2" target="s-dq-auto"><mxGeometry relative="1" as="geometry" /></mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend-title" value="LEGEND" style="text;html=1;fontSize=11;fontStyle=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="30" y="790" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="Manual / User Action" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="30" y="815" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Automated (EventBridge/Lambda)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="180" y="815" width="190" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="Result / Outcome" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="390" y="815" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="Approval Step" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#8E24AA;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="530" y="815" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="Limitation / Note" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#FF9800;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="650" y="815" width="110" height="30" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

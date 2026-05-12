@@ -1,0 +1,275 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Cross-Domain Data Product Sync for SageMaker Unified Studio.
+  Deploys in the Marketplace account (Account 2) to mirror data products from a Producer account (Account 1).
+
+Parameters:
+  SourceAccountId:
+    Type: String
+    Description: AWS Account ID of the Producer account
+  SourceDatabase:
+    Type: String
+    Description: Glue database name in the Producer account
+  SourceDomainId:
+    Type: String
+    Description: DataZone domain ID in the Producer account (e.g. dzd-xxxxxxxx)
+  SourceProjectId:
+    Type: String
+    Description: DataZone project ID in the Producer account
+  TargetDatabase:
+    Type: String
+    Description: Glue database in this account (Marketplace project's Lakehouse DB)
+  DomainId:
+    Type: String
+    Description: DataZone domain ID in this account (Marketplace)
+  ProjectId:
+    Type: String
+    Description: DataZone project ID in this account (Marketplace)
+  ProjectEnvironmentRoleArn:
+    Type: String
+    Description: ARN of the Marketplace project's environment role (datazone_usr_role_<projectId>_<envId>)
+  SourceGlueRoleArn:
+    Type: String
+    Description: ARN of the cross-account role in Producer account for Glue access (must trust this account)
+  SourceDataZoneRoleArn:
+    Type: String
+    Description: ARN of the cross-account role in Producer account for DataZone access (must trust this account)
+  S3BucketArn:
+    Type: String
+    Description: ARN of the Producer's S3 bucket containing Iceberg data
+
+Resources:
+
+  # --- IAM Role for Lambdas ---
+  CatalogSyncLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CatalogSyncLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SyncPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Ref SourceGlueRoleArn
+                  - !Ref SourceDataZoneRoleArn
+              - Effect: Allow
+                Action:
+                  - glue:CreateTable
+                  - glue:UpdateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetDatabase
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - datazone:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - lakeformation:GrantPermissions
+                  - lakeformation:GetDataAccess
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+  # --- Lambda 1: Glue Table Sync ---
+  GlueTableSyncFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: glue-table-sync
+      Runtime: python3.12
+      Handler: glue_table_sync.handler
+      Role: !GetAtt CatalogSyncLambdaRole.Arn
+      Timeout: 60
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          # Placeholder - deploy actual code from lambda/glue_table_sync.py
+          def handler(event, context):
+              pass
+      Environment:
+        Variables:
+          SOURCE_ACCOUNT_ID: !Ref SourceAccountId
+          SOURCE_DATABASE: !Ref SourceDatabase
+          TARGET_DATABASE: !Ref TargetDatabase
+          SOURCE_ROLE_ARN: !Ref SourceGlueRoleArn
+          PROJECT_ROLE_ARN: !Ref ProjectEnvironmentRoleArn
+
+  # --- Lambda 2: Catalog Sync Mirror ---
+  CatalogSyncMirrorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: catalog-sync-mirror
+      Runtime: python3.12
+      Handler: catalog_sync_mirror.handler
+      Role: !GetAtt CatalogSyncLambdaRole.Arn
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          # Placeholder - deploy actual code from lambda/catalog_sync_mirror.py
+          def handler(event, context):
+              pass
+      Environment:
+        Variables:
+          SOURCE_ACCOUNT_ID: !Ref SourceAccountId
+          SOURCE_DATABASE: !Ref SourceDatabase
+          TARGET_DATABASE: !Ref TargetDatabase
+          SOURCE_ROLE_ARN: !Ref SourceGlueRoleArn
+          SOURCE_DZ_ROLE_ARN: !Ref SourceDataZoneRoleArn
+          SOURCE_DOMAIN_ID: !Ref SourceDomainId
+          SOURCE_PROJECT_ID: !Ref SourceProjectId
+          DOMAIN_ID: !Ref DomainId
+          PROJECT_ID: !Ref ProjectId
+          ACCOUNT_ID: !Ref AWS::AccountId
+
+  # --- EventBridge Rule: Glue Table Sync (from Producer) ---
+  GlueSyncFromProducerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: glue-sync-from-producer
+      Description: Triggers table sync when Producer creates/updates Glue tables
+      EventPattern:
+        source:
+          - aws.glue
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+            - glue.amazonaws.com
+          eventName:
+            - CreateTable
+            - UpdateTable
+          requestParameters:
+            databaseName:
+              - !Ref SourceDatabase
+        account:
+          - !Ref SourceAccountId
+      Targets:
+        - Id: glue-table-sync
+          Arn: !GetAtt GlueTableSyncFunction.Arn
+
+  GlueSyncLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GlueTableSyncFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt GlueSyncFromProducerRule.Arn
+
+  # --- EventBridge Rule: Asset Sync (from Producer publish) ---
+  AssetSyncFromProducerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: asset-sync-from-producer
+      Description: Triggers metadata sync when Producer publishes an asset
+      EventPattern:
+        source:
+          - aws.datazone
+        detail-type:
+          - Asset Added To Catalog
+          - New Asset Version Available
+        account:
+          - !Ref SourceAccountId
+      Targets:
+        - Id: catalog-sync-mirror
+          Arn: !GetAtt CatalogSyncMirrorFunction.Arn
+
+  AssetSyncLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CatalogSyncMirrorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AssetSyncFromProducerRule.Arn
+
+  # --- EventBridge Rule: Data Source Run Succeeded (triggers metadata overlay) ---
+  DataSourceRunRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: datasource-run-triggers-asset-sync
+      Description: Triggers metadata sync after data source discovers new tables
+      EventPattern:
+        source:
+          - aws.datazone
+        detail-type:
+          - Data Source Run Succeeded
+      Targets:
+        - Id: catalog-sync-mirror
+          Arn: !GetAtt CatalogSyncMirrorFunction.Arn
+
+  DataSourceRunLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CatalogSyncMirrorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DataSourceRunRule.Arn
+
+  # --- Lake Formation: MirrorCatalogLFRole for credential vending ---
+  MirrorCatalogLFRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MirrorCatalogLFRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lakeformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Ref S3BucketArn
+                  - !Sub '${S3BucketArn}/*'
+
+  # Note: After deployment, register the Producer's S3 location in Lake Formation
+  # using MirrorCatalogLFRole. This cannot be done via CFN — use CLI:
+  #   aws lakeformation register-resource \
+  #     --resource-arn <S3_PATH_ARN> \
+  #     --role-arn <MirrorCatalogLFRole_ARN> \
+  #     --use-service-linked-role false
+
+  # --- EventBridge: Allow Producer account to send events ---
+  EventBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: AllowProducerAccountEvents
+      Action: events:PutEvents
+      Principal: !Ref SourceAccountId
+
+Outputs:
+  GlueTableSyncFunctionArn:
+    Description: ARN of the Glue Table Sync Lambda
+    Value: !GetAtt GlueTableSyncFunction.Arn
+  CatalogSyncMirrorFunctionArn:
+    Description: ARN of the Catalog Sync Mirror Lambda
+    Value: !GetAtt CatalogSyncMirrorFunction.Arn
+  CatalogSyncLambdaRoleArn:
+    Description: ARN of the Lambda execution role (add as Contributor to both SMUS projects)
+    Value: !GetAtt CatalogSyncLambdaRole.Arn
+  MirrorCatalogLFRoleArn:
+    Description: ARN of the LF role for credential vending (register in LF, add to Producer S3 bucket policy)
+    Value: !GetAtt MirrorCatalogLFRole.Arn
