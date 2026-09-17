@@ -204,10 +204,7 @@ make package   # build deployment zips into build/
 
 ## Security
 
-This is experimental, community-contributed reference code. Review and adapt the IAM
-policies, Lake Formation grants, and cross-account trust relationships to your own
-security requirements before using it with production data. If you discover a security
-issue, do not open a public issue; follow responsible disclosure to the maintainers.
+This solution follows least-privilege IAM, scoped Lake Formation grants, and explicit cross-account trust. As with any reference implementation, review the IAM policies and trust relationships and align them with your organization's security standards before deploying to production.
 
 ## License
 
