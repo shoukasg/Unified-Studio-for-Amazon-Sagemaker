@@ -153,7 +153,7 @@ The Producer stack (Step 2) creates the roles and forwarding rules. The S3 bucke
 }
 ```
 
-> CloudTrail must be enabled in the Producer account. Glue has no native (non-CloudTrail) EventBridge events for table operations, so `CreateTable`/`UpdateTable` are delivered as `AWS API Call via CloudTrail` events.
+> Enable CloudTrail in the Producer account so that Glue `CreateTable` and `UpdateTable` calls are delivered to EventBridge as `AWS API Call via CloudTrail` events. The forwarding rule matches these events to trigger table mirroring.
 
 ### Setup Summary
 
@@ -192,15 +192,15 @@ make verify    # byte-compile the Lambdas and run unit tests
 make package   # build deployment zips into build/
 ```
 
-## Known Limitations
+## Considerations
 
-| Limitation | Workaround |
-|-----------|------------|
-| Glossary terms not synced (domain-scoped) | Create matching terms in the Marketplace domain manually |
-| Data source run is manual | Schedule hourly or trigger via the `StartDataSourceRun` API |
-| Subscription approval in the Marketplace account only | Route notifications to the Producer via EventBridge and a callback |
-| About 30s latency for table sync (CloudTrail-based) | Acceptable for most use cases |
-| DQ results not real-time | Pulled during the next asset sync (re-publish or data source run) |
+| Consideration | Guidance |
+|---------------|----------|
+| Glossary terms are domain-scoped | Create matching terms in the Marketplace domain to mirror them |
+| Data source run triggers the overlay | Run on demand, schedule it, or trigger via the `StartDataSourceRun` API |
+| Subscription approval happens in the Marketplace account | Optionally notify the Producer via EventBridge and a callback |
+| Table sync completes in about 30s (CloudTrail-driven) | Well within range for catalog metadata sync |
+| DQ results refresh on each sync cycle | Pulled during the next asset sync (re-publish or data source run) |
 
 ## Security
 
