@@ -2,11 +2,19 @@
 
 Publish data products from one SageMaker Unified Studio (SMUS) domain and make them discoverable, subscribable, and queryable in another domain without data duplication.
 
-## Problem
+## Overview
 
-SMUS does not natively support cross-domain data product publishing. Enterprises with multiple domains (M&A activity, regulatory separation, multi-BU structures) cannot share data products across organizational boundaries without custom infrastructure. Resource links (RAM shares) received in a target domain cannot be further shared within that domain's governance layer.
+This solution enables cross-domain data product publication and subscription in SageMaker Unified Studio (SMUS). It lets you publish a data product in one SMUS domain and make it discoverable, subscribable, and queryable in another domain, while the data stays in the producer's account and is read in place.
 
-## Solution
+It extends the native SMUS experience so organizations with multiple domains (for example, separate business units, regulatory boundaries, or newly acquired teams) can share governed data products across those boundaries and consume them through the standard SMUS subscription workflow.
+
+## Use cases
+
+- Share curated data products across business-unit or regulatory domain boundaries.
+- Offer a central "marketplace" domain where products from many producer domains are discoverable in one place.
+- Give consumers a familiar SMUS subscribe-and-query experience for data that lives in another domain, with Lake Formation governing access and no data duplication.
+
+## How it works
 
 Event-driven catalog mirroring with two Lambda functions that sync table metadata, business context, data quality results, and lineage across domains. Consumers subscribe and query through native SMUS workflows with Lake Formation governing access.
 
