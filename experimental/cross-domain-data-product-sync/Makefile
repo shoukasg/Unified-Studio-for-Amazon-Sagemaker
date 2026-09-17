@@ -1,6 +1,8 @@
 # Cross-Domain Data Product Sync: build and test entry points.
 
 PYTHON ?= python3
+VENV := .venv
+VENV_PY := $(VENV)/bin/python
 LAMBDA_DIR := lambda
 BUILD_DIR := build
 FUNCTIONS := glue_table_sync catalog_sync_mirror
@@ -9,21 +11,27 @@ FUNCTIONS := glue_table_sync catalog_sync_mirror
 
 help:
 	@echo "Targets:"
-	@echo "  install   Install dev dependencies"
-	@echo "  test      Run unit tests"
+	@echo "  install   Create a local virtualenv and install dev dependencies"
+	@echo "  test      Run unit tests (auto-installs deps if needed)"
 	@echo "  lint      Byte-compile all Lambda sources"
 	@echo "  package   Build Lambda deployment zips into $(BUILD_DIR)/"
 	@echo "  verify    Lint plus tests"
-	@echo "  clean     Remove build artifacts"
+	@echo "  clean     Remove build artifacts and the local virtualenv"
 
-install:
-	$(PYTHON) -m pip install -r requirements-dev.txt
+# Create an isolated virtualenv so tests do not depend on the system Python
+# (avoids PEP 668 "externally-managed environment" errors on macOS/Homebrew).
+install: $(VENV_PY)
+
+$(VENV_PY):
+	$(PYTHON) -m venv $(VENV)
+	$(VENV_PY) -m pip install --quiet --upgrade pip
+	$(VENV_PY) -m pip install --quiet -r requirements-dev.txt
 
 lint:
 	$(PYTHON) -m py_compile $(LAMBDA_DIR)/*.py
 
-test:
-	$(PYTHON) -m pytest -q
+test: $(VENV_PY)
+	$(VENV_PY) -m pytest -q
 
 verify: lint test
 
@@ -36,6 +44,6 @@ package: clean
 	@echo "Artifacts written to $(BUILD_DIR)/"
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(VENV)
 	find . -name '__pycache__' -type d -prune -exec rm -rf {} +
 	find . -name '*.pyc' -delete

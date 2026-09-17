@@ -1,0 +1,7 @@
+# Local build and test artifacts (created by the Makefile)
+.venv/
+build/
+*.zip
+__pycache__/
+*.pyc
+.pytest_cache/
