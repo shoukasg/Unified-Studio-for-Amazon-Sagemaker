@@ -211,4 +211,6 @@ issue, do not open a public issue; follow responsible disclosure to the maintain
 
 ## License
 
-This project is licensed under the MIT-0 License.
+This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
+
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved. SPDX-License-Identifier: MIT-0
