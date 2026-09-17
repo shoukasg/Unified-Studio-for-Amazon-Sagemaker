@@ -204,7 +204,7 @@ make package   # build deployment zips into build/
 
 ## Security
 
-This solution follows least-privilege IAM, scoped Lake Formation grants, and explicit cross-account trust. As with any reference implementation, review the IAM policies and trust relationships and align them with your organization's security standards before deploying to production.
+This solution uses scoped IAM policies (resource-level where the APIs support it), scoped Lake Formation grants, and explicit cross-account trust. As with any reference implementation, review the IAM policies and trust relationships and align them with your organization's security standards before deploying to production.
 
 ## License
 
