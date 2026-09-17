@@ -2,8 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Cross-Domain Data Product Sync: Producer account companion stack.
   Deploys the three cross-account roles the Marketplace account depends on
-  (Glue/DQ read, DataZone read, and EventBridge forwarding) plus the two
-  EventBridge rules that forward Glue and DataZone events to the Marketplace bus.
+  (Glue/DQ read, SageMaker Catalog read, and EventBridge forwarding) plus the two
+  EventBridge rules that forward Glue and SageMaker Catalog events to the Marketplace bus.
 
 Parameters:
   MarketplaceAccountId:
@@ -59,7 +59,7 @@ Resources:
                   - glue:GetDataQualityResult
                 Resource: '*'
 
-  # --- Role assumed by the Marketplace Lambda for DataZone reads ---
+  # --- Role assumed by the Marketplace Lambda for SageMaker Catalog reads ---
   DataZoneReaderRole:
     Type: AWS::IAM::Role
     Properties:
@@ -130,12 +130,12 @@ Resources:
           Arn: !Sub 'arn:${AWS::Partition}:events:${MarketplaceRegion}:${MarketplaceAccountId}:event-bus/default'
           RoleArn: !GetAtt EventForwardingRole.Arn
 
-  # --- Forward DataZone asset publish/revision events to the Marketplace bus ---
+  # --- Forward SageMaker Catalog asset publish/revision events to the Marketplace bus ---
   DataZonePublishForwardingRule:
     Type: AWS::Events::Rule
     Properties:
       Name: datazone-publish-sync-to-marketplace
-      Description: Forwards Producer DataZone asset events to the Marketplace bus.
+      Description: Forwards Producer SageMaker Catalog asset events to the Marketplace bus.
       EventPattern:
         source:
           - aws.datazone

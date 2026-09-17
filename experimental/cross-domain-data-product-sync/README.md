@@ -21,7 +21,7 @@ Event-driven catalog mirroring with two Lambda functions that sync table metadat
 ### Key Features
 
 - **Zero-copy data access**: consumers read producer's S3 directly via LF credential vending
-- **Native DataZone subscription fulfilment**: managed assets with automatic LF grants on approval
+- **Native SageMaker Catalog subscription fulfilment**: managed assets with automatic LF grants on approval
 - **Business metadata sync**: name, description, readme, column descriptions from producer domain
 - **DQ results propagation**: pulled from producer on each sync cycle
 - **Lineage sync**: OpenLineage events forwarded across domains
@@ -120,7 +120,7 @@ aws cloudformation deploy \
 | Step | Action | Why |
 |------|--------|-----|
 | 4a | Register Producer's S3 location in Lake Formation with `MirrorCatalogLFRole` | Enables credential vending for cross-account S3 reads |
-| 4b | Add `CatalogSyncLambdaRole` as **Contributor** to the Marketplace SMUS project | Lambda needs DataZone permissions to search/update assets |
+| 4b | Add `CatalogSyncLambdaRole` as **Contributor** to the Marketplace SMUS project | Lambda needs SageMaker Catalog permissions to search/update assets |
 | 4c | Create a **Data Source** in the Marketplace project pointing to the target Glue database | Required for creating managed assets (subscription-eligible) |
 | 4d | Enable LF Application Integration Settings: "Allow external engines to access data in Amazon S3 locations with full table access" | Required for credential vending to work |
 

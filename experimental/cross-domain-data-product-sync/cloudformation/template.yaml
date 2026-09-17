@@ -15,20 +15,20 @@ Parameters:
     Description: Glue database name in the Producer account.
   SourceDomainId:
     Type: String
-    Description: DataZone domain ID in the Producer account (dzd-xxxxxxxx).
+    Description: SageMaker Catalog (DataZone) domain ID in the Producer account (dzd-xxxxxxxx).
   SourceProjectId:
     Type: String
     Default: ''
-    Description: (Optional) DataZone project ID in the Producer account.
+    Description: (Optional) SageMaker Catalog (DataZone) project ID in the Producer account.
   TargetDatabase:
     Type: String
     Description: Glue database in this account (Marketplace project's Lakehouse DB).
   DomainId:
     Type: String
-    Description: DataZone domain ID in this account (Marketplace).
+    Description: SageMaker Catalog (DataZone) domain ID in this account (Marketplace).
   ProjectId:
     Type: String
-    Description: DataZone project ID in this account (Marketplace).
+    Description: SageMaker Catalog (DataZone) project ID in this account (Marketplace).
   ProjectEnvironmentRoleArn:
     Type: String
     Description: ARN of the Marketplace project's environment role.
@@ -37,7 +37,7 @@ Parameters:
     Description: ARN of the Producer cross-account role for Glue/DQ reads (must trust this account).
   SourceDataZoneRoleArn:
     Type: String
-    Description: ARN of the Producer cross-account role for DataZone reads (must trust this account).
+    Description: ARN of the Producer cross-account role for SageMaker Catalog (DataZone) reads (must trust this account).
   S3BucketArn:
     Type: String
     Description: ARN of the Producer's S3 bucket containing the table data.
